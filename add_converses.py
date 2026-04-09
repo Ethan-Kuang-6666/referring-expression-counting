@@ -119,7 +119,7 @@ for img, exprs in anno.items():
     for expr_key, data in exprs.items():
         by_class[data['class']].append(expr_key)
 
-    new_exprs = dict(exprs)  # originals preserved as-is
+    new_exprs = {}  # originals not included
 
     for expr_key, data in exprs.items():
         cls = data['class']
@@ -131,7 +131,7 @@ for img, exprs in anno.items():
             continue
 
         pool = TYPE_POOL.get(typ, [1, 2, 6])
-        chosen = rng.sample(pool, min(2, len(pool)))
+        tid = rng.choice(pool)
 
         sibling_data = [{'points': exprs[s]['points'], 'type': exprs[s]['type']}
                         for s in siblings]
@@ -141,15 +141,14 @@ for img, exprs in anno.items():
         total_pts_before += pts_before
         total_pts_after += len(union_pts)
 
-        for tid in chosen:
-            new_key, new_attr = apply_template(tid, cls, attr)
-            new_exprs[new_key] = {
-                'class': cls,
-                'attribute': new_attr,
-                'points': union_pts,
-                'type': typ,
-            }
-            complement_count += 1
+        new_key, new_attr = apply_template(tid, cls, attr)
+        new_exprs[new_key] = {
+            'class': cls,
+            'attribute': new_attr,
+            'points': union_pts,
+            'type': typ,
+        }
+        complement_count += 1
 
     new_anno[img] = new_exprs
 
