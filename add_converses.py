@@ -127,27 +127,35 @@ for img, exprs in anno.items():
         typ = data['type']
         siblings = [k for k in by_class[cls] if k != expr_key]
 
-        if not siblings:
-            continue
-
         pool = TYPE_POOL.get(typ, [1, 2, 6])
         tid = rng.choice(pool)
-
-        sibling_data = [{'points': exprs[s]['points'], 'type': exprs[s]['type']}
-                        for s in siblings]
-
-        pts_before = sum(len(d['points']) for d in sibling_data)
-        union_pts = dedup_union(sibling_data)
-        total_pts_before += pts_before
-        total_pts_after += len(union_pts)
-
         new_key, new_attr = apply_template(tid, cls, attr)
-        new_exprs[new_key] = {
-            'class': cls,
-            'attribute': new_attr,
-            'points': union_pts,
-            'type': typ,
-        }
+
+        if not siblings:
+            # No same-class siblings: complement is empty (all objects of this
+            # class in the image already belong to this expression)
+            new_exprs[new_key] = {
+                'class': cls,
+                'attribute': new_attr,
+                'points': [],
+                'type': typ,
+            }
+        else:
+            sibling_data = [{'points': exprs[s]['points'], 'type': exprs[s]['type']}
+                            for s in siblings]
+
+            pts_before = sum(len(d['points']) for d in sibling_data)
+            union_pts = dedup_union(sibling_data)
+            total_pts_before += pts_before
+            total_pts_after += len(union_pts)
+
+            new_exprs[new_key] = {
+                'class': cls,
+                'attribute': new_attr,
+                'points': union_pts,
+                'type': typ,
+            }
+
         complement_count += 1
 
     new_anno[img] = new_exprs
